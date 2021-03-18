@@ -1,0 +1,27 @@
+query ListIssues {
+    repository(owner:"realm", name:"realm-java"){
+        issues(last:30){
+            edges{
+                node{
+                    title
+                    url
+                    state
+                    createdAt
+                    comments{
+                        totalCount
+                    }
+                    author{
+                        login
+                    }
+                    labels(first:5){
+                        edges{
+                            node{
+                                name
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
