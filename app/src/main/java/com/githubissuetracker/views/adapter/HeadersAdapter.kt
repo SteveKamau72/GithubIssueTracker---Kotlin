@@ -7,16 +7,15 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import com.githubissuetracker.BR
-import com.githubissuetracker.structure.IssueStructure
-import com.githubissuetracker.views.adapter.IssuesAdapter.ViewHolder
+import com.githubissuetracker.structure.HeadersStructure
 import com.githubissuetracker.views.viewmodels.IssueFeedViewModel
 
-class IssuesAdapter(
+class HeadersAdapter(
     @param:LayoutRes private val layoutId: Int,
     private val issueFeedViewModel: IssueFeedViewModel
 ) :
-    RecyclerView.Adapter<ViewHolder>() {
-    var issuesList: List<IssueStructure> = ArrayList()
+    RecyclerView.Adapter<HeadersAdapter.ViewHolder>() {
+    var headersList: List<HeadersStructure> = ArrayList()
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val viewBinding =
@@ -25,7 +24,7 @@ class IssuesAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(position, issuesList[position])
+        holder.bind(position, issueFeedViewModel, headersList[position])
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -33,19 +32,20 @@ class IssuesAdapter(
     }
 
     override fun getItemCount(): Int {
-        return issuesList.size
+        return headersList.size
     }
 
     @JvmName("setIssuesList1")
-    fun setIssuesList(issuesList: List<IssueStructure>) {
-        this.issuesList = issuesList
+    fun setHeadersList(headersList: List<HeadersStructure>) {
+        this.headersList = headersList
         notifyDataSetChanged()
     }
 
     class ViewHolder(private val binding: ViewDataBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(position: Int, issue: IssueStructure) {
-            binding.setVariable(BR.structure, issue)
+        fun bind(position: Int, issueFeedViewModel: IssueFeedViewModel, header: HeadersStructure) {
+            binding.setVariable(BR.structure, header)
             binding.setVariable(BR.position, position)
+            binding.setVariable(BR.viewModel, issueFeedViewModel)
         }
     }
 }

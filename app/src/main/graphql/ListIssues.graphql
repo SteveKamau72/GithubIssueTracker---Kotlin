@@ -1,5 +1,12 @@
 query ListIssues {
     repository(owner:"realm", name:"realm-java"){
+        languages(first:10){
+            edges{
+                node{
+                    name
+                }
+            }
+        }
         issues(last:30){
             edges{
                 node{
@@ -12,6 +19,7 @@ query ListIssues {
                     }
                     author{
                         login
+                        avatarUrl
                     }
                     labels(first:5){
                         edges{

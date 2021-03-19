@@ -8,11 +8,13 @@ import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.coroutines.toDeferred
 import com.apollographql.apollo.exception.ApolloException
 import com.githubissuetracker.R
+import com.githubissuetracker.structure.HeadersStructure
 import com.githubissuetracker.structure.IssueStructure
 import com.githubissuetracker.structure.ResultState
 import com.githubissuetracker.utils.Constants.Companion.DATE_MONTH_YEAR_FORMATTED
 import com.githubissuetracker.utils.Constants.Companion.GENERIC_DATE_TIME_FORMAT_UTC
 import com.githubissuetracker.utils.Utils
+import com.githubissuetracker.views.adapter.HeadersAdapter
 import com.githubissuetracker.views.adapter.IssuesAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,16 +22,21 @@ import javax.inject.Inject
 
 class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloClient) : ViewModel() {
     var resultStateLiveData: MutableLiveData<ResultState> = MutableLiveData()
+    var headerItemClickLiveData: MutableLiveData<Int> = MutableLiveData()
     var issuesList: MutableList<IssueStructure> = ArrayList()
+    var headersList: MutableList<HeadersStructure> = ArrayList()
     var issuesAdapter: IssuesAdapter
+    var headersAdapter: HeadersAdapter
 
     init {
         fetchIssues()
         issuesAdapter = IssuesAdapter(R.layout.issue_item, this)
+        headersAdapter = HeadersAdapter(R.layout.header_item, this)
     }
 
-    private fun fetchIssues() {
+    fun fetchIssues() {
         var errorMessage = ""
+        setResult(ResultState.Loading)
         viewModelScope.launch(Dispatchers.IO) {
             val response = try {
                 apolloClient.query(ListIssuesQuery()).toDeferred().await()
@@ -39,11 +46,13 @@ class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloCli
                 setResult(ResultState.Success(false, errorMessage))
                 return@launch
             }
-            val issues = response.data?.repository
-            if (issues != null && !response.hasErrors()) {
+            val repository = response.data?.repository
+            if (repository != null && !response.hasErrors()) {
+                issuesList.clear()
                 //create a new structure because the generated ListIssuesQuery has data-binding
                 // issues and also causes cyclic dependencies error
-                issues.issues.edges?.map {
+                repository.issues.edges?.map {
+                    //add an issue object to list
                     val issueStructure = it?.node?.let { node ->
                         node.author?.let { it1 ->
                             IssueStructure(
@@ -61,10 +70,23 @@ class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloCli
                     }
                     issueStructure?.let { it1 -> issuesList.add(it1) }
                 }
-
+                //add header labels to list
+                headersList.clear()
+                addFilterAndDateHeaders()
+                repository.languages?.edges?.map {
+                    val headersStructure = it?.node?.let { node -> HeadersStructure(node.name) }
+                    headersStructure?.let { it1 -> headersList.add(it1) }
+                }
             }
             setResult(ResultState.Success(true, errorMessage))
         }
+    }
+
+    private fun addFilterAndDateHeaders() {
+        val dateHeader = HeadersStructure("Date")
+        headersList.add(dateHeader)
+        val filterHeader = HeadersStructure("Filter")
+        headersList.add(filterHeader)
     }
 
     private fun setResult(result: ResultState) {
@@ -73,5 +95,10 @@ class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloCli
 
     fun setIssuesToAdapter() {
         issuesAdapter.setIssuesList(issuesList)
+        headersAdapter.setHeadersList(headersList)
+    }
+
+    fun headerItemClick(position: Int) {
+        headerItemClickLiveData.value = position
     }
 }
