@@ -1,5 +1,5 @@
-query ListIssues {
-    repository(owner:"realm", name:"realm-java"){
+query ListIssues ($owner:String!, $repo:String!){
+    repository(owner: $owner, name: $repo){
         languages(first:10){
             edges{
                 node{
@@ -7,7 +7,7 @@ query ListIssues {
                 }
             }
         }
-        issues(last:30){
+        issues(last:100){
             edges{
                 node{
                     title

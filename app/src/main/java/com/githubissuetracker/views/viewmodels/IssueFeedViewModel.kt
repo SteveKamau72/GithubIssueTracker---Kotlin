@@ -1,6 +1,7 @@
 package com.githubissuetracker.views.viewmodels
 
 import ListIssuesQuery
+import SearchByDateQuery
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,8 @@ import com.githubissuetracker.structure.IssueStructure
 import com.githubissuetracker.structure.ResultState
 import com.githubissuetracker.utils.Constants.Companion.DATE_MONTH_YEAR_FORMATTED
 import com.githubissuetracker.utils.Constants.Companion.GENERIC_DATE_TIME_FORMAT_UTC
+import com.githubissuetracker.utils.Constants.Companion.REPO_NAME
+import com.githubissuetracker.utils.Constants.Companion.REPO_OWNER
 import com.githubissuetracker.utils.Utils
 import com.githubissuetracker.views.adapter.HeadersAdapter
 import com.githubissuetracker.views.adapter.IssuesAdapter
@@ -39,7 +42,7 @@ class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloCli
         setResult(ResultState.Loading)
         viewModelScope.launch(Dispatchers.IO) {
             val response = try {
-                apolloClient.query(ListIssuesQuery()).toDeferred().await()
+                apolloClient.query(ListIssuesQuery(REPO_OWNER, REPO_NAME)).toDeferred().await()
             } catch (e: ApolloException) {
                 e.printStackTrace()
                 errorMessage = e.message.toString()
@@ -80,6 +83,66 @@ class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloCli
             }
             setResult(ResultState.Success(true, errorMessage))
         }
+    }
+
+    /**
+     * Query like "repo:tensorflow/tensorflow created:2020-11-01..2020-12-01 type:issue"
+     **/
+    fun searchIssueByDate(startDate: String, endDate: String) {
+        var errorMessage = ""
+        setResult(ResultState.Loading)
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = try {
+                apolloClient.query(SearchByDateQuery(getQueryForDate(startDate, endDate)))
+                    .toDeferred().await()
+            } catch (e: ApolloException) {
+                e.printStackTrace()
+                errorMessage = e.message.toString()
+                setResult(ResultState.Success(false, errorMessage))
+                return@launch
+            }
+            val search = response.data?.search
+            if (search != null && !response.hasErrors()) {
+                issuesList.clear()
+                //create a new structure because the generated SearchByDateQuery has data-binding
+                // issues and also causes cyclic dependencies error
+                search.nodes?.map {
+                    //add an issue object to list
+                    val issueStructure = it?.asIssue?.let { issue ->
+                        issue.author?.let { it1 ->
+                            IssueStructure(
+                                issue.title, issue.state.name,
+                                Utils().formatDateString(
+                                    GENERIC_DATE_TIME_FORMAT_UTC,
+                                    DATE_MONTH_YEAR_FORMATTED,
+                                    issue.createdAt.toString()
+                                ),
+                                it1.login,
+                                issue.url.toString(),
+                                issue.comments.totalCount
+                            )
+                        }
+                    }
+                    issueStructure?.let { it1 -> issuesList.add(it1) }
+                }
+            }
+            setResult(ResultState.Success(true, errorMessage))
+        }
+    }
+
+    private fun getQueryForDate(startDate: String, endDate: String): String {
+        //"repo:tensorflow/tensorflow created:2020-11-01..2020-12-01 type:issue"
+        val query: StringBuilder = StringBuilder()
+        query.append("repo:")
+        query.append(REPO_OWNER)
+        query.append("/")
+        query.append(REPO_NAME)
+        query.append(" created:")
+        query.append(startDate)
+        query.append("..")
+        query.append(endDate)
+        query.append(" type:issue")
+        return query.toString()
     }
 
     private fun addFilterAndDateHeaders() {

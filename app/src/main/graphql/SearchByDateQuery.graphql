@@ -1,0 +1,27 @@
+query SearchByDate($query:String!){
+    search(first: 100, query: $query ,
+        type: ISSUE){
+        nodes{
+            ...on Issue {
+                title
+                url
+                state
+                createdAt
+                comments{
+                    totalCount
+                }
+                author{
+                    login
+                    avatarUrl
+                }
+                labels(first:5){
+                    edges{
+                        node{
+                            name
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

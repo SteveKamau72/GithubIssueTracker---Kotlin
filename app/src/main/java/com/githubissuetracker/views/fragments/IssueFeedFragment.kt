@@ -1,7 +1,6 @@
 package com.githubissuetracker.views.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -49,14 +48,22 @@ class IssueFeedFragment : DaggerFragment() {
         binding.swipeRefresh.setOnRefreshListener {
             viewModel.fetchIssues()
         }
-        setUpDatePicker()
     }
 
     private fun setUpDatePicker() {
         // To show a date picker with Civil dates, also today as the starting date
         val today = CivilCalendar()
         val callback = SingleDayPickCallback { day ->
-            Log.e("showDatePicker: ", "" + day.date)
+            //format date and month to add leading zeros
+            viewModel.searchIssueByDate(
+                "${day.year}-${String.format("%02d", day.month)}-${
+                    String.format(
+                        "%02d",
+                        day.date
+                    )
+                }",
+                "${day.year}-${String.format("%02d", day.month)}-${String.format("%02d", day.date)}"
+            )
         }
         datePicker = PrimeDatePicker.bottomSheetWith(today)
             .pickSingleDay(callback)
@@ -74,6 +81,7 @@ class IssueFeedFragment : DaggerFragment() {
                 is ResultState.Success -> {
                     binding.swipeRefresh.isRefreshing = false
                     viewModel.setIssuesToAdapter()
+                    setUpDatePicker()
                 }
             }
         })
