@@ -70,6 +70,7 @@
                         android:inputType="text"
                         android:paddingStart="50dp"
                         android:paddingTop="10dp"
+                        android:imeOptions="actionDone"
                         android:paddingEnd="10dp"
                         android:paddingBottom="10dp"
                         android:singleLine="true"

@@ -38,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
-            android:background="@drawable/blue_state_bg"
+            android:background="@{structure.state.equalsIgnoreCase(`Open`)?@drawable/blue_state_bg:@drawable/green_state_bg}"
             android:gravity="center"
             android:paddingStart="10dp"
             android:paddingTop="5dp"

@@ -1,9 +1,11 @@
 package com.githubissuetracker.views.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import com.aminography.primecalendar.civil.CivilCalendar
@@ -12,10 +14,13 @@ import com.aminography.primedatepicker.picker.callback.SingleDayPickCallback
 import com.githubissuetracker.R
 import com.githubissuetracker.databinding.FragmentIssueFeedBinding
 import com.githubissuetracker.structure.ResultState
+import com.githubissuetracker.utils.Constants.Companion.QUERY_ISSUE
+import com.githubissuetracker.utils.Constants.Companion.REPO_LANGUAGES
 import com.githubissuetracker.utils.ViewModelFactory
 import com.githubissuetracker.views.viewmodels.IssueFeedViewModel
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
+
 
 class IssueFeedFragment : DaggerFragment() {
     private lateinit var binding: FragmentIssueFeedBinding
@@ -46,7 +51,23 @@ class IssueFeedFragment : DaggerFragment() {
 
     private fun setViews() {
         binding.swipeRefresh.setOnRefreshListener {
-            viewModel.fetchIssues()
+            viewModel.queryIssues("", "", "", "")
+        }
+
+        //handle ImeOptions' done button when user searches
+        binding.etSearch.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val searchText: String = binding.etSearch.text.toString()
+                if (searchText.isNotEmpty()) {
+                    binding.etSearch.error = null
+                    viewModel.queryIssues("", "", "", searchText)
+                } else {
+                    binding.etSearch.error = getString(R.string.empty_string)
+                }
+                true
+            } else {
+                false
+            }
         }
     }
 
@@ -55,14 +76,19 @@ class IssueFeedFragment : DaggerFragment() {
         val today = CivilCalendar()
         val callback = SingleDayPickCallback { day ->
             //format date and month to add leading zeros
-            viewModel.searchIssueByDate(
+            viewModel.queryIssues(
                 "${day.year}-${String.format("%02d", day.month)}-${
                     String.format(
                         "%02d",
                         day.date
                     )
                 }",
-                "${day.year}-${String.format("%02d", day.month)}-${String.format("%02d", day.date)}"
+                "${day.year}-${String.format("%02d", day.month)}-${
+                    String.format(
+                        "%02d",
+                        day.date
+                    )
+                }", "", ""
             )
         }
         datePicker = PrimeDatePicker.bottomSheetWith(today)
@@ -79,18 +105,27 @@ class IssueFeedFragment : DaggerFragment() {
                     binding.swipeRefresh.isRefreshing = true
                 }
                 is ResultState.Success -> {
-                    binding.swipeRefresh.isRefreshing = false
-                    viewModel.setIssuesToAdapter()
-                    setUpDatePicker()
+                    if (result.request == REPO_LANGUAGES) {
+                        setUpDatePicker()
+                        viewModel.setLanguagesToAdapter()
+                    } else if (result.request == QUERY_ISSUE) {
+                        when (result.success) {
+                            true -> {
+                                binding.swipeRefresh.isRefreshing = false
+                                viewModel.setIssuesToAdapter()
+                            }
+                            false -> {
+                                Log.e("error: ", result.message)
+                            }
+                        }
+                    }
                 }
             }
         })
-        viewModel.headerItemClickLiveData.observe(viewLifecycleOwner, {
+        viewModel.dateItemClickLiveData.observe(viewLifecycleOwner, {
             when (it) {
-                0 -> {//date item selected
+                true -> {//date item selected
                     datePicker.show(childFragmentManager, "Date Picker")
-                }
-                1 -> {//filter item selected
                 }
             }
         })

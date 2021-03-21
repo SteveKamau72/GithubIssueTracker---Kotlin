@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">GITHUB ISSUE TRACKER</string>
+    <string name="empty_string">Cannot be empty</string>
 </resources>

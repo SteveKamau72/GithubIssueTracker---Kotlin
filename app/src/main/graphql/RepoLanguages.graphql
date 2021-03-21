@@ -1,0 +1,11 @@
+query RepoLanguages ($owner:String!, $repo:String!){
+    repository(owner: $owner, name: $repo){
+        languages(first:20){
+            edges{
+                node{
+                    name
+                }
+            }
+        }
+    }
+}

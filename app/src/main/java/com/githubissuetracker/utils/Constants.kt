@@ -7,6 +7,10 @@ class Constants {
         const val DATE_MONTH_YEAR_FORMATTED = "dd MMM yyyy"
         const val REPO_NAME: String = "tensorflow"
         const val REPO_OWNER: String = "tensorflow"
+
+        const val REPO_LANGUAGES: String = "repo_languages"
+        const val QUERY_ISSUE: String = "query_issue"
+
     }
 
 }
