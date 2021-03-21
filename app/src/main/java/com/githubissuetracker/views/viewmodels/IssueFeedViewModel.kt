@@ -2,6 +2,7 @@ package com.githubissuetracker.views.viewmodels
 
 import GetIssuesQuery
 import RepoLanguagesQuery
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -72,7 +73,10 @@ class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloCli
     }
 
     /**
-     * Query like "repo:tensorflow/tensorflow created:2020-11-01..2020-12-01 type:issue"
+     * @param startDate YYYY-MM-DD
+     * @param endDate YYYY-MM-DD
+     * @param state issue state: open or closed
+     * @param searchText search title field
      **/
     fun queryIssues(startDate: String, endDate: String, state: String, searchText: String) {
         var errorMessage = ""
@@ -82,7 +86,7 @@ class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloCli
         setResult(ResultState.Loading)
         viewModelScope.launch(Dispatchers.IO) {
             val response = try {
-                apolloClient.query(GetIssuesQuery(getQueryForDate(state)))
+                apolloClient.query(GetIssuesQuery(getQuery(state)))
                     .toDeferred().await()
             } catch (e: ApolloException) {
                 e.printStackTrace()
@@ -120,12 +124,13 @@ class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloCli
     }
 
     /**
+     * @param state
      * Default query:
      * "query" : "repo:tensorflow/tensorflow type:issue"
      * Filters added
      * "query" : "repo:tensorflow/tensorflow created:2020-11-01..2020-12-01 type:issue state:open"
      */
-    private fun getQueryForDate(state: String): String {
+    private fun getQuery(state: String): String {
         val query: StringBuilder = StringBuilder()
         query.append("repo:")
         query.append(REPO_OWNER)
@@ -141,6 +146,7 @@ class IssueFeedViewModel @Inject constructor(private val apolloClient: ApolloCli
             query.append(" in:title $searchText")
         }
         query.append(" type:issue")
+        Log.e("getQueryForDate: ", query.toString())
         return query.toString()
     }
 
