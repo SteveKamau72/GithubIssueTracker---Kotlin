@@ -18,6 +18,11 @@ This is a project assignment. These were the requirements:
 - be downloadable from play store or app store. If you do not have a Play or App store account, you can use a testing service e.g Firebase App Distribution
 - For inspiration, consider [this design by Willard Shikami](https://dribbble.com/shots/14624938-Flutter-Issue-Tracker-UI)
 
+## Screenshots:
+![image](https://user-images.githubusercontent.com/11080725/112819078-df3bee00-908c-11eb-875f-4cdb82a685ee.png)
+![image](https://user-images.githubusercontent.com/11080725/112819569-64270780-908d-11eb-8ad4-7589bf47b3c7.png)
+
+
 ## To run this project
 Create an access token to GitHub API. On your profile, go to Settings, at the left side of the page click at Developer Settings, then Personal access tokens, and finally click on Generate new token button.
 
