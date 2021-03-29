@@ -19,4 +19,9 @@ class MainActivity : DaggerAppCompatActivity() {
         transaction.add(R.id.container_body, fragment)
         transaction.commit()
     }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finish()
+    }
 }

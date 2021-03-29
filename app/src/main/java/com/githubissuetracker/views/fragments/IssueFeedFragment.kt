@@ -62,7 +62,7 @@ class IssueFeedFragment : DaggerFragment() {
                     binding.etSearch.error = null
                     viewModel.queryIssues("", "", "", searchText)
                 } else {
-                    binding.etSearch.error = getString(R.string.empty_string)
+                    viewModel.queryIssues("", "", "", "")
                 }
                 true
             } else {
@@ -77,13 +77,13 @@ class IssueFeedFragment : DaggerFragment() {
         val callback = SingleDayPickCallback { day ->
             //format date and month to add leading zeros
             viewModel.queryIssues(
-                "${day.year}-${String.format("%02d", day.month)}-${
+                "${day.year}-${String.format("%02d", day.month+1)}-${
                     String.format(
                         "%02d",
                         day.date
                     )
                 }",
-                "${day.year}-${String.format("%02d", day.month)}-${
+                "${day.year}-${String.format("%02d", day.month+1)}-${
                     String.format(
                         "%02d",
                         day.date
